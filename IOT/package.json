@@ -10,6 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "@influxdata/influxdb-client": "^1.35.0",
+    "aedes": "^1.1.1",
     "mqtt": "^5.15.1"
   },
   "description": ""
