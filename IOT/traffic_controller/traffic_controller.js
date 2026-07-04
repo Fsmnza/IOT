@@ -31,7 +31,8 @@ class TrafficControl
     // starts the broker
     async #startBroker() {
         // Call the static async method to initialize the broker instance
-        const aedes = await Aedes.createBroker();
+        this.aedes = await Aedes.createBroker();
+        const aedes = this.aedes;
         const PORT = 1883;
         
         const server = net.createServer(aedes.handle);
@@ -50,7 +51,7 @@ class TrafficControl
             if (client) {
                 const topic = packet.topic;
                 const payloadString = packet.payload.toString();
-                console.log(`[MQTT Broker] Message on topic [${topic}] from ${client.id}: ${payloadString}`);
+                //console.log(`[MQTT Broker] Message on topic [${topic}] from ${client.id}: ${payloadString}`);
 
                 this.#routeIncomingMessage(topic, payloadString);
             }
