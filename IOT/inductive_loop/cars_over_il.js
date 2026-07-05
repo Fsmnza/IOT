@@ -3,46 +3,52 @@
 
 const InductiveLoop = require('./InductiveLoop');
 
-const northSensor = new InductiveLoop({
-    brokerUrl: 'mqtt://localhost:1883',
-    junctionId: 'crossroad_1',
-    sensorId: 'vertical1',
-    place:'infrontof'
-});
-const southSensor = new InductiveLoop({
-    brokerUrl: 'mqtt://localhost:1883',
-    junctionId: 'crossroad_1',
-    sensorId: 'vertical2',
-    place: 'infrontof'
-});
+const junctionIdArg = process.argv[2] || 'crossroad_1';
 
-northSensor.connect();
-southSensor.connect()
 
-northSensor.client.on('connect', () => {
-    
-    setTimeout(() => {
-        console.log("\n--- Simulating Car Arrival ---");
-        northSensor.triggerVehicleEnter();
-    }, 2000);
+let sensors = [];
+let directions = ['vertical', 'horizontal']
+let places = ['infrontof', 'behind'];
+let c = 0;
+for (let i of directions)
+{
+    for (let j of places)
+    {
+        for (let q = 0; q<2; q+=1)
+        {
+            let direction = i.concat(c);
+            let sensor = new InductiveLoop({
+                brokerUrl: 'mqtt://localhost:1883',
+                junctionId: junctionIdArg,
+                sensorId: direction, 
+                place: j 
+                });
+            c+=1;
+            sensors.push(sensor)
+            console.log(sensor);
+        }
 
-    setTimeout(() => {
-        console.log("\n--- Simulating Car Departure ---");
-        northSensor.triggerVehicleExit();
-    }, 5000);
-    
-});
+    }
+    c = 0;
+}
 
-southSensor.client.on('connect', () => {
-    
-    setTimeout(() => {
-        console.log("\n--- Simulating Car Arrival ---");
-        southSensor.triggerVehicleEnter();
-    }, 2000);
+for (let i of sensors)
+{
+    i.connect();
+}
 
-    setTimeout(() => {
-        console.log("\n--- Simulating Car Departure ---");
-        southSensor.triggerVehicleExit();
-    }, 5000);
-    
+sensors.forEach((sensor, index) => {
+    const mqttClient = sensor.client; 
+
+    mqttClient.on('connect', () => {
+        setTimeout(() => {
+            console.log(`\n--- [Simulating] Car Arrival on ${sensor.sensorId} (${sensor.place}) ---`);
+            sensor.triggerVehicleEnter();
+        }, 2000 + (index * 1500)); //index * 1500 so the different sensors get triggered at different times
+
+        setTimeout(() => {
+            console.log(`\n--- [Simulating] Car Departure on ${sensor.sensorId} (${sensor.place}) ---`);
+            sensor.triggerVehicleExit();
+        }, 5000 + (index * 1500));
+    });
 });

@@ -6,7 +6,8 @@ const mqtt = require('mqtt');
 const brokerUrl = 'mqtt://localhost:1883'; 
 const client = mqtt.connect(brokerUrl);
 
-const TOPIC = 'junction/crossroad_1/tl/control';
+const junctionIdArg = process.argv[2] || 'crossroad_1';
+const TOPIC = `junction/${junctionIdArg}/tl/control`;
 
 client.on('connect', () => {
     console.log(`[Receiver] Connected to MQTT broker at ${brokerUrl}`);

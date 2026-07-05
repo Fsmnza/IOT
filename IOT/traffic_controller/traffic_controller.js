@@ -259,4 +259,8 @@ class TrafficControl
 }
 
 
-tc = new TrafficControl({JUNCTION_ID: 'crossroad_1'});
+const junctionIdArg = process.argv[2] || 'crossroad_1';
+
+const tc = new TrafficControl({ JUNCTION_ID: junctionIdArg });
+
+console.log(`[System] Initialized controller for Junction ID: ${tc.JUNCTION_ID}`);

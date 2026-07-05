@@ -1,7 +1,10 @@
 const mqtt = require('mqtt');
 const client = mqtt.connect('mqtt://localhost:1883');
 
-const JUNCTION_ID = 'crossroad_1';
+// take the value from terminal 
+const junctionIdArg = process.argv[2] || 'crossroad_1';
+
+const JUNCTION_ID = junctionIdArg;
 
 const CONGESTION_THRESHOLD = 5;   
 const MIN_GREEN_MS = 10000;       
