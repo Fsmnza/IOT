@@ -25,7 +25,7 @@ for (let i of directions)
                 });
             c+=1;
             sensors.push(sensor)
-            console.log(sensor);
+            //console.log(sensor);
         }
 
     }

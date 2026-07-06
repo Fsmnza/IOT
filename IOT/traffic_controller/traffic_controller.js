@@ -76,7 +76,7 @@ class TrafficControl
 
         if (deviceType === 'il') {
             this.#processInductiveLoopInput(topic, payload);
-        } else if (deviceType === 'sensors') { //TODO change
+        } else if (deviceType === 'sensors') { //TODO change to tl
             this.#processTrafficLightInput(topic, payload);
         }
     }
@@ -196,7 +196,6 @@ class TrafficControl
     }
     #switchLight(direction)
     {
-        //TODO
         const topic = `junction/${this.JUNCTION_ID}/tl/control`;
         const payload = {
             junctionId: this.JUNCTION_ID,
@@ -212,11 +211,13 @@ class TrafficControl
     {
         //TODO
         const topic = `junction/${this.JUNCTION_ID}/tl/control`;
+        let direction = "vertical";
         const payload = {
             junctionId: this.JUNCTION_ID,
-            lightTime: -5, // 'vertical' or 'horizontal'
-            timestamp: Math.floor(Date.now() / 1000),
-            comand: "Decrease the "
+            lightTime: -5, // TODO calculate time or 
+            direction: direction,
+            timestamp: Math.floor(Date.now() / 1000), 
+            comand: "Change time remaining"
         };
 
         console.log(`[TrafficControl] Calculating green windows. V-Jam: ${vertical_count}, H-Jam: ${horizontal_count}`);
