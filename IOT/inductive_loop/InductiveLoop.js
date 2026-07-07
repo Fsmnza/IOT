@@ -14,14 +14,13 @@ class InductiveLoop {
         this.brokerUrl = config.brokerUrl || 'mqtt://localhost:1883';
         this.junctionId = config.junctionId || 'crossroad_1';
         this.sensorId = config.sensorId || 'lane_1';
-        this.place = config.place || 'infrontof'; //either in front of or  
+        this.place = config.place || 'infrontof'; //either in front of or 
         this.topic = `junction/${this.junctionId}/il/${this.sensorId}/${this.place}`;
         this.client = null;
         this.isVehiclePresent = false;
     }
 
-    
-    connect() {
+        connect() {
         this.client = mqtt.connect(this.brokerUrl);
 
         this.client.on('connect', () => {
