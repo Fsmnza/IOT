@@ -1,6 +1,3 @@
-//File to test Inductive loops class
-//Also it's an example of how to use the class in the code
-
 const InductiveLoop = require('./InductiveLoop');
 
 const junctionIdArg = process.argv[2] || 'crossroad_1';

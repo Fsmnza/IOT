@@ -9,6 +9,10 @@ services:
       - "9001:9001"
     volumes:
       - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
+    deploy:
+      resources:
+        limits:
+          memory: 100M
 
   influxdb:
     image: influxdb:2.7
@@ -21,8 +25,13 @@ services:
       - DOCKER_INFLUXDB_INIT_PASSWORD=IotVladMalika
       - DOCKER_INFLUXDB_INIT_ORG=traffic
       - DOCKER_INFLUXDB_INIT_BUCKET=traffic_data
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=my-super-secret-admin-token
     volumes:
       - influxdb-data:/var/lib/influxdb2
+    deploy:
+      resources:
+        limits:
+          memory: 500M
 
   grafana:
     image: grafana/grafana-oss:latest
@@ -34,6 +43,10 @@ services:
     depends_on:
       - mqtt-broker
       - influxdb
+    deploy:
+      resources:
+        limits:
+          memory: 300M
 
 volumes:
   influxdb-data:

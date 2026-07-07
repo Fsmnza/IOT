@@ -1,139 +1,139 @@
+
 const mqtt = require('mqtt');
 const client = mqtt.connect('mqtt://localhost:1883');
 
-// take the value from terminal 
 const junctionIdArg = process.argv[2] || 'crossroad_1';
-
 const JUNCTION_ID = junctionIdArg;
 
-const CONGESTION_THRESHOLD = 5;   
-const MIN_GREEN_MS = 10000;       
-const MAX_WAIT_MS = 90000;        
-const YELLOW_MS = 5000;
-const RED_CLEAR_MS = 0;          
-let phase = 'GREEN';              
-let activeAxis = 'vertical';      
-let phaseStart = Date.now();
-let waitStart = { vertical: null, horizontal: Date.now() }; 
+const DEFAULT_GREEN_MS = 10000;
+const YELLOW_MS = 3000;
+const ALL_RED_MS = 1000;      
 
-const vehicleCounts = { vertical: 0, horizontal: 0 };
+let activeDirection = 'vertical';
+let phase = 'GREEN';         
+let phaseStart = Date.now();
+let currentGreenDurationMs = DEFAULT_GREEN_MS;
+let pendingSwitchTo = null;   
 
 client.on('connect', () => {
-    console.log(`Connected. Managing ${JUNCTION_ID}...`);
-    client.subscribe(`junction/${JUNCTION_ID}/sensors/#`);
-    startSensorSimulation();
-    setInterval(tick, 1000); 
+    console.log(`[Actuator] Connected. Managing physical lights for ${JUNCTION_ID}`);
+    client.subscribe(`junction/${JUNCTION_ID}/tl/control`, (err) => {
+        if (err) console.error('[Actuator] Subscribe error:', err);
+    });
+    setInterval(tick, 500);
+    publishStatus();
 });
 
-function startSensorSimulation() {
-    setInterval(() => {
-        const payload = {
-            sensorId: 'lane_north_1',
-            timestamp: Math.floor(Date.now() / 1000),
-            vehicleDetected: Math.random() > 0.4
-        };
-        client.publish(`junction/${JUNCTION_ID}/sensors/lane_north_1`, JSON.stringify(payload));
-    }, 5000);
-}
+client.on('error', (err) => {
+    console.error('[Actuator] MQTT Client Error:', err);
+});
 
 client.on('message', (topic, message) => {
     try {
-        const payload = JSON.parse(message.toString());
-        if (!topic.includes('sensors')) return;
+        const data = JSON.parse(message.toString());
 
-        const axis = topic.includes('north') || topic.includes('south') ? 'vertical' : 'horizontal';
-        if (payload.vehicleDetected) {
-            vehicleCounts[axis] += 1;
+        if (data.comand === 'Switch light') {
+            handleSwitchRequest(data.requestPhase);
+        } else if (data.comand === 'Change time remaining') {
+            handleTimeChange(data.direction, data.lightTime);
         }
     } catch (e) {
-        console.error('Bad sensor payload:', e);
+        console.error('[Actuator] Bad control payload:', e);
     }
 });
 
-function decideNextAxis() {
-    const vBusy = vehicleCounts.vertical >= CONGESTION_THRESHOLD;
-    const hBusy = vehicleCounts.horizontal >= CONGESTION_THRESHOLD;
+function handleSwitchRequest(requestedDirection) {
+    if (!requestedDirection || requestedDirection === activeDirection) return;
 
-    if (vBusy && !hBusy) return 'vertical';
-    if (hBusy && !vBusy) return 'horizontal';
-
-    return activeAxis === 'vertical' ? 'horizontal' : 'vertical';
+    pendingSwitchTo = requestedDirection;
+    if (phase === 'GREEN') {
+        startYellow();
+    }
 }
 
-function tick() {
-    const now = Date.now();
-    const elapsed = now - phaseStart;
-
-    if (phase === 'GREEN') {
-        const minGreenPassed = elapsed >= MIN_GREEN_MS;
-        const otherAxis = activeAxis === 'vertical' ? 'horizontal' : 'vertical';
-        const starved = waitStart[otherAxis] && (now - waitStart[otherAxis] >= MAX_WAIT_MS);
-
-        const nextAxis = decideNextAxis();
-        const shouldSwitch = nextAxis !== activeAxis && (minGreenPassed || starved);
-
-        if (shouldSwitch) {
-            startYellow();
-        } else {
-            sendLightState(activeAxis, 'GREEN', remaining(MIN_GREEN_MS, elapsed));
-        }
-    } else if (phase === 'YELLOW') {
-        if (elapsed >= YELLOW_MS) {
-            startRed();
-        } else {
-            sendLightState(activeAxis, 'YELLOW', remaining(YELLOW_MS, elapsed));
-        }
-    } else if (phase === 'RED') {
-        if (elapsed >= RED_CLEAR_MS) {
-            switchAxisAndStartGreen();
-        }
+function handleTimeChange(direction, lightTime) {
+    if (direction === activeDirection && phase === 'GREEN' && typeof lightTime === 'number' && lightTime > 0) {
+        const elapsed = Date.now() - phaseStart;
+        currentGreenDurationMs = Math.max(elapsed, lightTime * 1000);
+        console.log(`[Actuator] Adjusted green duration for ${direction} to ${lightTime}s`);
     }
 }
 
 function startYellow() {
     phase = 'YELLOW';
     phaseStart = Date.now();
-    changeTrafficLight(activeAxis, 'YELLOW', YELLOW_MS / 1000);
+    publishStatus();
 }
 
-function startRed() {
-    phase = 'RED';
+function startAllRed() {
+    phase = 'ALL_RED';
     phaseStart = Date.now();
-    changeTrafficLight(activeAxis, 'RED', 0);
+    publishStatus();
 }
 
-function switchAxisAndStartGreen() {
-    const oldAxis = activeAxis;
-    const newAxis = oldAxis === 'vertical' ? 'horizontal' : 'vertical';
-
-    waitStart[oldAxis] = Date.now();
-    waitStart[newAxis] = null;
-
-    vehicleCounts[newAxis] = 0;
-
-    activeAxis = newAxis;
+function startGreen(direction) {
+    activeDirection = direction;
     phase = 'GREEN';
     phaseStart = Date.now();
-
-    changeTrafficLight(newAxis, 'GREEN', MIN_GREEN_MS / 1000);
+    currentGreenDurationMs = DEFAULT_GREEN_MS;
+    pendingSwitchTo = null;
+    publishStatus();
 }
 
-function remaining(total, elapsed) {
-    return Math.max(0, Math.ceil((total - elapsed) / 1000));
+function tick() {
+    const elapsed = Date.now() - phaseStart;
+
+    if (phase === 'GREEN') {
+        if (pendingSwitchTo && pendingSwitchTo !== activeDirection) {
+            startYellow();
+        } else {
+            publishStatus();
+        }
+    } else if (phase === 'YELLOW') {
+        if (elapsed >= YELLOW_MS) {
+            startAllRed();
+        } else {
+            publishStatus();
+        }
+    } else if (phase === 'ALL_RED') {
+        if (elapsed >= ALL_RED_MS) {
+            const nextDirection = pendingSwitchTo || (activeDirection === 'vertical' ? 'horizontal' : 'vertical');
+            startGreen(nextDirection);
+        } else {
+            publishStatus();
+        }
+    }
 }
 
-function sendLightState(axis, state, countdown) {
-    changeTrafficLight(axis, state, countdown);
-}
+function publishStatus() {
+    const elapsed = Date.now() - phaseStart;
+    let countdown = 0;
+    let lightState = 'RED';
 
-function changeTrafficLight(direction, state, countdown) {
-    const actuatorPayload = {
+    if (phase === 'GREEN') {
+        lightState = 'GREEN';
+        countdown = Math.max(0, Math.ceil((currentGreenDurationMs - elapsed) / 1000));
+    } else if (phase === 'YELLOW') {
+        lightState = 'YELLOW';
+        countdown = Math.max(0, Math.ceil((YELLOW_MS - elapsed) / 1000));
+    } else if (phase === 'ALL_RED') {
+        lightState = 'RED';
+        countdown = Math.max(0, Math.ceil((ALL_RED_MS - elapsed) / 1000));
+    }
+
+    const statusPayload = {
         junctionId: JUNCTION_ID,
-        traffic_light: direction,
-        lightState: state,
-        countdown: countdown,
+        traffic_light: activeDirection,
+        lightState,
+        countdown,
         timestamp: Math.floor(Date.now() / 1000)
     };
-    client.publish(`junction/${JUNCTION_ID}/actuators/lights`, JSON.stringify(actuatorPayload));
-    console.log('[Actuator]', actuatorPayload);
+
+    client.publish(`junction/${JUNCTION_ID}/tl/status`, JSON.stringify(statusPayload));
+    console.log(`[Actuator] phase=${phase} active=${activeDirection} state=${lightState} countdown=${countdown}s`);
 }
+
+process.on('SIGINT', () => {
+    client.end();
+    process.exit();
+});
