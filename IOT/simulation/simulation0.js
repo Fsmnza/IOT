@@ -9,10 +9,8 @@ const junctionIdArg = process.argv[2] || 'crossroad_1';
 const scripts = [
     { name: 'TLC', path: 'IOT/IOT/traffic_controller/traffic_controller.js' },
     { name: 'Receiver', path: 'IOT/IOT/traffic_controller/receiver.js' }, //idealy it should be changed to other
-    { name: 'IL', path: 'IOT/IOT/inductive_loop/cars_over_il.js' },
+    { name: 'IL', path: 'IOT/IOT/inductive_loop/traffic_simulator.js' }, //cars are driving in the script
 
-    // You can add your mock sensors/inductive loop simulators here later!
-    // { name: 'Sensors Spawner', path: 'IOT/IOT/sensors/simulator.js' } 
 ];
 
 const runningProcesses = [];
@@ -41,7 +39,6 @@ function startScript(script) {
     runningProcesses.push(process);
 }
 
-// 1. Handle clean exit when you press Ctrl+C
 process.on('SIGINT', () => {
     console.log('\n[Orchestrator] Shutting down all simulation processes...');
     runningProcesses.forEach((proc) => proc.kill('SIGINT'));

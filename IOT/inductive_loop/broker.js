@@ -13,7 +13,7 @@ async function startBroker() {
         console.log(`[MQTT Broker] Local broker started and listening on port ${PORT}`);
     });
 
-    // Log when clients (like your sensors) connect
+    // Log when clients connect
     aedes.on('client', function (client) {
         console.log(`[MQTT Broker] Client Connected: ${client ? client.id : 'UNKNOWN'}`);
     });

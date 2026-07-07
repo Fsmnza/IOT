@@ -76,7 +76,7 @@ class TrafficControl
 
         if (deviceType === 'il') {
             this.#processInductiveLoopInput(topic, payload);
-        } else if (deviceType === 'sensors') { //TODO change to tl
+        } else if (deviceType === 'actuators') { //TODO change to tl
             this.#processTrafficLightInput(topic, payload);
         }
     }
