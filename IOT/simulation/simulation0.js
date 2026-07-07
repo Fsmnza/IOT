@@ -8,8 +8,9 @@ const junctionIdArg = process.argv[2] || 'crossroad_1';
 // Array of scripts to run, in the exact order they should start
 const scripts = [
     { name: 'TLC', path: 'IOT/IOT/traffic_controller/traffic_controller.js' },
-    { name: 'Receiver', path: 'IOT/IOT/traffic_controller/receiver.js' }, //idealy it should be changed to other
+    { name: 'Receiver', path: 'IOT/IOT/crossroad_1.js' }, //idealy it should be changed to other
     { name: 'IL', path: 'IOT/IOT/inductive_loop/traffic_simulator.js' }, //cars are driving in the script
+    { name: 'IL', path: 'IOT/IOT/trafficlight/trafficlightssimulated.js' }, //traffic lights
 
 ];
 
