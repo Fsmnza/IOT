@@ -1,51 +1,55 @@
 const InductiveLoop = require('./InductiveLoop');
-
 const junctionIdArg = process.argv[2] || 'crossroad_1';
 
+let sensors = {
+    horizontal: [],
+    vertical: []
+};
 
-let sensors = [];
-let directions = ['vertical', 'horizontal']
-let places = ['infrontof', 'behind'];
-let c = 0;
-for (let i of directions)
-{
-    for (let j of places)
-    {
-        for (let q = 0; q<2; q+=1)
-        {
-            let direction = i.concat(c);
+['horizontal', 'vertical'].forEach(dir => {
+    ['infrontof', 'behind'].forEach(place => {
+        for (let q = 0; q < 2; q++) {
+            let sensorId = `${dir}_${place}_${q}`;
             let sensor = new InductiveLoop({
                 brokerUrl: 'mqtt://localhost:1883',
                 junctionId: junctionIdArg,
-                sensorId: direction, 
-                place: j 
-                });
-            c+=1;
-            sensors.push(sensor)
-            //console.log(sensor);
+                sensorId: sensorId,
+                place: place
+            });
+            sensor.connect();
+            sensors[dir].push(sensor);
         }
-
-    }
-    c = 0;
-}
-
-for (let i of sensors)
-{
-    i.connect();
-}
-
-sensors.forEach((sensor, index) => {
-    const mqttClient = sensor.client; 
-
-    mqttClient.on('connect', () => {
-        setTimeout(() => {
-            console.log(`\n--- [Simulating] Car Arrival on ${sensor.sensorId} (${sensor.place}) ---`);
-            sensor.triggerVehicleEnter();
-        }, 2000 + (index * 1500)); //index * 1500 so the different sensors get triggered at different times
-
-        setTimeout(() => {
-            console.log(`\n--- [Simulating] Car Departure on ${sensor.sensorId} (${sensor.place}) ---`);
-            sensor.triggerVehicleExit();
-        }, 5000 + (index * 1500));
     });
 });
+
+function simulateTraffic(direction, targetCarCount) {
+    console.log(`\n=== [Simulation] Group of ${targetCarCount} cars arrived on ${direction} ===`);
+    
+    for (let i = 0; i < targetCarCount; i++) {
+        const sensorList = sensors[direction];
+        const sensor = sensorList[i % sensorList.length];
+        
+        setTimeout(() => {
+            sensor.triggerVehicleEnter();
+        }, i * 50); 
+
+        setTimeout(() => {
+            sensor.triggerVehicleExit();
+        }, 12000 + (i * 100));
+    }
+}
+
+setTimeout(() => {
+    simulateTraffic('horizontal', 8);
+    simulateTraffic('vertical', 2);
+}, 2000);
+
+setTimeout(() => {
+    simulateTraffic('horizontal', 1);
+    simulateTraffic('vertical', 10);
+}, 22000);
+
+setTimeout(() => {
+    simulateTraffic('horizontal', 7);
+    simulateTraffic('vertical', 7);
+}, 45000);
