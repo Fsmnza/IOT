@@ -1,12 +1,9 @@
-// simulate_1_crossroad.js — оркестратор для одного перекрестка
 
 const { spawn } = require('child_process');
 const path = require('path');
 
 const junctionIdArg = process.argv[2] || 'crossroad_1';
 
-// Порядок важен: сначала брокер (уже в Docker), затем контроллер и актуатор,
-// затем сенсоры, и логгер в БД можно поднять в любой момент.
 const scripts = [
     { name: 'TLC', path: 'traffic_controller/traffic_controller.js' },
     { name: 'Crossroad', path: 'crossroad_1.js' },
