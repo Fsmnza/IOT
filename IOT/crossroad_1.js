@@ -42,9 +42,10 @@ client.on('message', (topic, message) => {
         const data = JSON.parse(message.toString());
 
         if (topic === CONTROL_TOPIC) {
-            if (data.comand === 'Switch light') {
+            // ИСПРАВЛЕНО: data.command вместо data.comand
+            if (data.command === 'Switch light') { 
                 handleSwitchRequest(data.requestPhase);
-            } else if (data.comand === 'Change time remaining') {
+            } else if (data.command === 'Change time remaining') {
                 handleTimeChange(data.direction, data.lightTime);
             }
         } else if (topic === TRAFFIC_COUNT_TOPIC) {

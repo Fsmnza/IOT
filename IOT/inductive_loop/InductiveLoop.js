@@ -14,16 +14,13 @@ class InductiveLoop {
         this.brokerUrl = config.brokerUrl || 'mqtt://localhost:1883';
         this.junctionId = config.junctionId || 'crossroad_1';
         this.sensorId = config.sensorId || 'lane_1';
-        this.place = config.place || 'infrontof'; //either in front of or 
-        
-        // MQTT topic for this specific sensor
+        this.place = config.place || 'infrontof'; //either in front of or  
         this.topic = `junction/${this.junctionId}/il/${this.sensorId}/${this.place}`;
         this.client = null;
         this.isVehiclePresent = false;
     }
 
     
-    //Connects the sensor to the MQTT broker
     connect() {
         this.client = mqtt.connect(this.brokerUrl);
 
@@ -39,18 +36,13 @@ class InductiveLoop {
     /**
      * Call this method when an external car simulation forces a car onto this loop.
      */
-    triggerVehicleEnter() {
-        if (this.isVehiclePresent) return; // Already occupied
-        
+    triggerVehicleEnter() {        
         this.isVehiclePresent = true;
         this.publishPayload(true);
     }
 
     
-     //Call this method when the external car simulation moves the car off this loop.
     triggerVehicleExit() {
-        if (!this.isVehiclePresent) return; // Already empty
-        
         this.isVehiclePresent = false;
         this.publishPayload(false);
     }
@@ -89,5 +81,4 @@ class InductiveLoop {
     }
 }
 
-// Export the class so your future Main script can instantiate multiple loops
 module.exports = InductiveLoop;
