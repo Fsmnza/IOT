@@ -209,20 +209,46 @@ class TrafficControl
     }
     #calculateGreenTimes(vertical_count, horizontal_count)
     {
-        //TODO
         const topic = `junction/${this.JUNCTION_ID}/tl/control`;
-        let direction = "vertical";
+        
+        // 1. Determine which direction has a bigger problem right now
+        let targetedDirection = 'vertical';
+        let jamCount = vertical_count;
+        
+        if (horizontal_count > vertical_count) {
+            targetedDirection = 'horizontal';
+            jamCount = horizontal_count;
+        }
+
+        // 2. Decide how much time to add based on the number of waiting cars
+        let timeAdjustment = 0;
+        
+        if (jamCount === 0) {
+            // No cars waiting anywhere? Maybe shave off time to cycle faster
+            timeAdjustment = -5; 
+        } else if (jamCount <= 2) {
+            // Just 1 or 2 cars waiting
+            timeAdjustment = 5;  // +5 seconds
+        } else if (jamCount <= 5) {
+            // Growing queue (3 to 5 cars)
+            timeAdjustment = 10; // +10 seconds
+        } else {
+            // Massive traffic jam! (More than 5 cars)
+            timeAdjustment = 15; // +15 seconds maximum bonus
+        }
+
+        // 3. Only broadcast if there's an actual adjustment to be made
+        // (This prevents the controller from spamming messages when traffic is stable)
         const payload = {
             junctionId: this.JUNCTION_ID,
-            lightTime: -5, // TODO calculate time or 
-            direction: direction,
-            timestamp: Math.floor(Date.now() / 1000), 
-            comand: "Change time remaining"
+            direction: targetedDirection,
+            lightTime: timeAdjustment, 
+            timestamp: Math.floor(Date.now() / 1000),
+            comand: timeAdjustment > 0 ? "Increase green window" : "Decrease green window"
         };
 
-        console.log(`[TrafficControl] Calculating green windows. V-Jam: ${vertical_count}, H-Jam: ${horizontal_count}`);
+        console.log(`[TrafficControl] Decision: ${targetedDirection} jam is ${jamCount} cars. Requesting adjustment: ${timeAdjustment}s`);
         this.#sendLoadToTL(topic, payload);
-        
     }
 
     // method
@@ -243,11 +269,14 @@ class TrafficControl
 
         //console.log(`[TrafficControl] Phase updated: ${this.current_phase.direction} is now ${this.current_phase.state} (${this.current_phase.countdown}s remaining)`);
 
-        // TODO 
         // If a light turns GREEN, we might want to clear or reduce the waiting cars for that direction
         if (data.lightState === 'GREEN') {
-            // Depending on your logic, you might want to reset the count or let inductive loops handle it
-            // this.cars_waiting[data.traffic_light] = 0; 
+            const activeDirection = data.traffic_light; // 'vertical' или 'horizontal'
+                
+                if (this.traffic_jam_direction[activeDirection]) {
+                    this.traffic_jam_direction[activeDirection].count = 0;
+                    console.log(`[TrafficControl] Light turned GREEN for ${activeDirection}. Resetting jam count to 0.`);
+                } 
         }
 
         } catch (error) {
