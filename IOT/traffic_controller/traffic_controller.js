@@ -291,42 +291,7 @@ class TrafficControl
 
     }
 
-    //-----------------------------------------------------------------------------------------------
-    //countdown display
-
-    //method to send data to countdown display
-    #sendLoadToDisplay(data) {
-        if (!this.aedes) {
-            console.log(`[Local Broker] Notification: Skipping display publish. Broker is not initialized yet.`);
-            return;
-        }
-
-        // 1. Construct the target topic: junction/junctionid/actuators/display
-        const topic = `junction/${this.JUNCTION_ID}/actuators/display`;
-
-        // 2. Combine the traffic light payload data with the internal traffic_jam_direction object
-        const displayPayload = {
-            ...data,
-            traffic_jam_direction: this.traffic_jam_direction
-        };
-
-        // 3. Format the packet structure that Aedes expects internally
-        const packet = {
-            topic: topic,
-            payload: Buffer.from(JSON.stringify(displayPayload)),
-            qos: 1, // At least once delivery to guarantee display updates
-            retain: false
-        };
-
-        // 4. Broadcast the message to any attached displays
-        this.aedes.publish(packet, (err) => {
-            if (err) {
-                console.error(`[Local Broker] Failed to publish data to display topic [${topic}]:`, err);
-            } else {
-                console.log(`[Local Broker] Successfully broadcasted combined data to display topic [${topic}]`);
-            }
-        });
-    }
+    
 }
 
 
