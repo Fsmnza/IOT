@@ -3,12 +3,13 @@ const { spawn } = require('child_process');
 const path = require('path');
 
 const junctionIdArg = process.argv[2] || 'crossroad_1';
+const traffic_mode = process.argv[2] || 'random'; //'random' or 'traffic_jam'
 
 const scripts = [
     { name: 'TLC', path: 'traffic_controller/traffic_controller.js' },
     { name: 'Crossroad', path: 'crossroad_1.js' },
     { name: 'DBLogger', path: 'db_logger/db_logger.js' },
-    { name: 'IL', path: 'inductive_loop/cars_over_il.js' },
+    { name: 'IL', path: 'inductive_loop/traffic_simulator.js' },
 ];
 
 const runningProcesses = [];
@@ -17,7 +18,7 @@ function startScript(script) {
     const scriptPath = path.resolve(script.path);
     console.log(`[Orchestrator] Starting ${script.name}...`);
 
-    const proc = spawn('node', [scriptPath, junctionIdArg]);
+    const proc = spawn('node', [scriptPath, junctionIdArg, traffic_mode]);
 
     proc.stdout.on('data', (data) => {
         console.log(`[${script.name}] ${data.toString().trim()}`);
