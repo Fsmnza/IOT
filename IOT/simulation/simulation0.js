@@ -8,6 +8,8 @@ const scripts = [
     { name: 'Crossroad', path: 'crossroad_1.js' },
     { name: 'DBLogger', path: 'db_logger/db_logger.js' },
     { name: 'IL', path: 'inductive_loop/cars_over_il.js' },
+    { name: 'TL', path: 'trafficlight/trafficlightsim.js' },
+
 ];
 
 const runningProcesses = [];
