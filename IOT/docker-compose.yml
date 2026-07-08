@@ -25,7 +25,7 @@ services:
       - DOCKER_INFLUXDB_INIT_PASSWORD=IotVladMalika
       - DOCKER_INFLUXDB_INIT_ORG=traffic
       - DOCKER_INFLUXDB_INIT_BUCKET=traffic_data
-      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=my-super-secret-admin-token
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=DTQ-hCreawYwIhNo7HL7WExixP8Ha961PIVWgGu95CyQ8iphyHbC9BaYMM5_XYg7x1Mwy7ebG8AAqW4qa9GzBA==
     volumes:
       - influxdb-data:/var/lib/influxdb2
     deploy:

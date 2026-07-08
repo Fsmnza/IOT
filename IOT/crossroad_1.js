@@ -42,11 +42,12 @@ client.on('message', (topic, message) => {
         const data = JSON.parse(message.toString());
 
         if (topic === CONTROL_TOPIC) {
-            // ИСПРАВЛЕНО: data.command вместо data.comand
             if (data.command === 'Switch light') { 
                 handleSwitchRequest(data.requestPhase);
             } else if (data.command === 'Change time remaining') {
                 handleTimeChange(data.direction, data.lightTime);
+            } else if (data.command === 'Extend phase') {
+                handleExtendPhase(data.direction, data.additionalTime);
             }
         } else if (topic === TRAFFIC_COUNT_TOPIC) {
             handleVehicleCount(data);
@@ -70,6 +71,13 @@ function handleTimeChange(direction, lightTime) {
         const elapsed = Date.now() - phaseStart;
         currentGreenDurationMs = Math.max(elapsed, lightTime * 1000);
         console.log(`[Actuator] Adjusted green duration for ${direction} to ${lightTime}s`);
+    }
+}
+
+function handleExtendPhase(direction, additionalTime) {
+    if (direction === activeDirection && phase === 'GREEN' && typeof additionalTime === 'number') {
+        currentGreenDurationMs += (additionalTime * 1000);
+        console.log(`[Actuator] Extended green duration for ${direction} by ${additionalTime}s`);
     }
 }
 

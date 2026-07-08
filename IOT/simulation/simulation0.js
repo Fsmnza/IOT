@@ -15,9 +15,7 @@ const runningProcesses = [];
 function startScript(script) {
     const scriptPath = path.resolve(script.path);
     console.log(`[Orchestrator] Starting ${script.name}...`);
-
     const proc = spawn('node', [scriptPath, junctionIdArg]);
-
     proc.stdout.on('data', (data) => {
         console.log(`[${script.name}] ${data.toString().trim()}`);
     });
@@ -29,7 +27,6 @@ function startScript(script) {
     proc.on('close', (code) => {
         console.log(`[Orchestrator] ${script.name} exited with code ${code}`);
     });
-
     runningProcesses.push(proc);
 }
 

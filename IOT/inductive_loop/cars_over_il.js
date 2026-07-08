@@ -28,11 +28,9 @@ function simulateTraffic(direction, targetCarCount) {
     for (let i = 0; i < targetCarCount; i++) {
         const sensorList = sensors[direction];
         const sensor = sensorList[i % sensorList.length];
-        
         setTimeout(() => {
             sensor.triggerVehicleEnter();
         }, i * 50); 
-
         setTimeout(() => {
             sensor.triggerVehicleExit();
         }, 12000 + (i * 100));

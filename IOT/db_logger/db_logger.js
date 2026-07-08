@@ -1,12 +1,7 @@
-// db_logger.js
-// Отдельный сервис: слушает ВСЕ сообщения по всем перекресткам и складывает их
-// в InfluxDB, чтобы потом смотреть в Grafana. Специально сделан отдельным
-// процессом, чтобы не мешать логику управления светофором с логикой хранения данных.
-
 const mqtt = require('mqtt');
 const { InfluxDB, Point } = require('@influxdata/influxdb-client');
 
-const JUNCTION_FILTER = process.argv[2] || '+'; // конкретный ID перекрестка или '+' для всех
+const JUNCTION_FILTER = process.argv[2] || '+'; 
 
 const INFLUX_URL = process.env.INFLUX_URL || 'http://localhost:8086';
 const INFLUX_TOKEN = process.env.INFLUX_TOKEN || 'DTQ-hCreawYwIhNo7HL7WExixP8Ha961PIVWgGu95CyQ8iphyHbC9BaYMM5_XYg7x1Mwy7ebG8AAqW4qa9GzBA==';
