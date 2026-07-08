@@ -98,6 +98,9 @@ client.on('message', (topic, message) => {
                 counts.horizontal = 0; counts.vertical = 0;
             }
         }
+        if (payload.vehicleDetected === false) {
+            counts[direction]-=1;  
+        }
     } catch (e) {
         console.error('[TLC] Error processing data:', e);
     }
